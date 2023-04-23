@@ -243,3 +243,83 @@ SELECT
 	Firstname,
     UPPER(FirstName) AS UpperCase
 FROM EmployeeErrors;
+
+# SUBQUERIES
+SELECT
+	EmployeeID,
+    Salary,
+    (SELECT AVG(Salary)
+    FROM EmployeeSalary) AS AllAvgSalary
+FROM EmployeeSalary;
+
+# How to do it with PARTITION BY
+SELECT
+	EmployeeID,
+    Salary,
+    AVG(Salary) OVER () AS AllAvgSalary
+FROM EmployeeSalary;
+
+# Why GROUP BY doesn't work
+SELECT
+	EmployeeID,
+    Salary,
+    AVG(Salary) AS AllAvgSalary
+FROM EmployeeSalary
+GROUP BY EmployeeID, Salary
+ORDER BY 1, 2;
+
+# SUBQUERY in FROM
+SELECT
+	a.EmployeeID,
+    AllAvgSalary
+FROM 
+	(SELECT
+		EmployeeID,
+        Salary,
+        AVG(Salary) over () as AllAvgSalary
+	 FROM EmployeeSalary) a
+ORDER BY a.EmployeeID;
+
+# SUBQUERY in WHERE
+SELECT
+	EmployeeID,
+	JobTitle,
+    Salary
+FROM EmployeeSalary
+WHERE EmployeeID
+IN (SELECT EmployeeID 
+	FROM EmployeeDemographics
+	WHERE Age > 30);
+    
+# STORED PROCEDURE: without parameters
+DROP PROCEDURE IF EXISTS proc_table;
+DELIMITER $$
+CREATE PROCEDURE proc_table()
+BEGIN
+DROP TEMPORARY TABLE IF EXISTS temp_table;
+CREATE TEMPORARY TABLE temp_table (
+	JobTitle VARCHAR(50),
+	EmployeesPerJob INT,
+	AvgAge INT,
+	AvgSalary INT);
+    
+INSERT INTO temp_table
+SELECT
+	JobTitle,
+	Count(JobTitle),
+    Avg(Age),
+    AVG(salary)
+FROM EmployeeDemographics emp
+JOIN EmployeeSalary sal
+	ON emp.EmployeeID = sal.EmployeeID
+group by JobTitle;
+
+SELECT *
+FROM temp_table
+ORDER BY AvgAge DESC;
+
+END $$
+
+CALL proc_table();
+
+
