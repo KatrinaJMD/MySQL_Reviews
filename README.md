@@ -1,2 +1,5 @@
-# MySQL_Reviews
-You can find practice and demo files you need if you want to review some SQL concepts.
+# SQL-Code
+
+I will store all code or documents related to SQL in this repository.
+
+Please feel free to download and use all code as your own.
