@@ -116,3 +116,130 @@ WHERE EmployeeID = 1012;
 # FROM EmployeeDemographics
 # WHERE EmployeeID = 1005;
 # THEN, replace [SELECT *] by [DELETE] after reviewing the rows to be Deleted
+
+# PARTITION BY
+SELECT
+	FirstName,
+    LastName,
+    Gender,
+    Salary,
+    COUNT(Gender) OVER (PARTITION BY Gender) as TotalGender
+FROM EmployeeDemographics dem
+JOIN EmployeeSalary sal
+ON dem.EmployeeID = sal.EmployeeID;
+
+# CTE (COMMON TABLE EXPRESSION)
+WITH CTE_Employee AS
+(SELECT
+	FirstName,
+    LastName,
+    Gender,
+    Salary,
+    COUNT(Gender) OVER (PARTITION by Gender) as TotalGender,
+    AVG (Salary) OVER (PARTITION BY Gender) as AvgSalary
+FROM EmployeeDemographics emp
+JOIN EmployeeSalary sal
+ON emp.EmployeeID = sal.EmployeeID
+WHERE Salary > '45000')
+SELECT *
+FROM CTE_Employee;
+
+# TEMP (TEMPORARY) TABLES
+DROP TABLE IF EXISTS temp_Employee;
+CREATE TEMPORARY TABLE temp_Employee (
+	EmployeeID INT,
+    JobTitle VARCHAR(100),
+    Salary INT);
+
+INSERT INTO temp_Employee
+VALUES (1001, 'HR', 45000);
+
+INSERT INTO temp_Employee
+SELECT *
+FROM EmployeeSalary;
+
+SELECT *
+FROM temp_Employee;
+
+DROP TABLE IF EXISTS tempo_Employee;
+CREATE TEMPORARY TABLE tempo_Employee (
+	JobTitle VARCHAR(50),
+    EmployeesPerJob INT,
+    AvgAge INT,
+    AvgSalary INT);
+    
+INSERT INTO tempo_Employee
+SELECT
+	JobTitle,
+	Count(JobTitle),
+	AVG(Age),
+    AVG(salary)
+FROM EmployeeDemographics emp
+JOIN EmployeeSalary sal
+ON emp.EmployeeID = sal.EmployeeID
+group by JobTitle;
+
+SELECT *
+FROM tempo_Employee;
+
+# STRING FUNCTIONS
+DROP TABLE IF EXISTS EmployeeErrors;
+CREATE TABLE EmployeeErrors (
+	EmployeeID VARCHAR(50),
+    FirstName VARCHAR(50),
+    LastName VARCHAR(50));
+
+INSERT INTO EmployeeErrors VALUES 
+('1001  ', 'Jimbo', 'Halbert'),
+('  1002', 'Pamela', 'Beasely'),
+('1005', 'TOby', 'Flenderson - Fired');
+
+SELECT *
+FROM EmployeeErrors;
+
+# USING [TRIM, LTRIM, RTRIM]
+# TRIM
+SELECT
+	EmployeeID,
+    TRIM(employeeID) AS id_TRIM
+FROM EmployeeErrors;
+
+# LTRIM
+SELECT
+	EmployeeID,
+    LTRIM(employeeID) AS id_LTRIM
+FROM EmployeeErrors;
+
+# RTRIM
+SELECT
+	EmployeeID,
+    RTRIM(employeeID) AS id_RTRIM
+FROM EmployeeErrors;
+
+# USING REPLACE
+SELECT
+	LastName,
+    REPLACE(LastName, '- Fired', '') AS LastNameFixed
+FROM EmployeeErrors;
+
+# USING SUBSTRING (Gender, LastName, Age, DateOfBirth)
+SELECT
+	Substring(err.FirstName,1,3) AS err_FirstName,
+	Substring(dem.FirstName,1,3) AS dem_FirstName,
+    Substring(err.LastName,1,3) AS err_LastName,
+    Substring(dem.LastName,1,3) AS dem_LastName
+FROM EmployeeErrors err
+JOIN EmployeeDemographics dem
+	ON Substring(err.FirstName,1,3) = Substring(dem.FirstName,1,3)
+	AND Substring(err.LastName,1,3) = Substring(dem.LastName,1,3);
+
+# USING UPPER AND LOWER
+SELECT
+	FirstName,
+    LOWER(FirstName) AS LowerCase
+FROM EmployeeErrors;
+
+SELECT
+	Firstname,
+    UPPER(FirstName) AS UpperCase
+FROM EmployeeErrors;
